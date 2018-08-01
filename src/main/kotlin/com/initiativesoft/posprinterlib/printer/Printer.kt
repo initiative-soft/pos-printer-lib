@@ -46,7 +46,7 @@ abstract class Printer
 
 
     private val discoveryThreadExecutor = Executors.newFixedThreadPool(2)//Discover and timeout
-    private val ioThreadExecutor = Executors.newFixedThreadPool(3)
+    private val ioThreadExecutor = Executors.newFixedThreadPool(4)
 
     private var _canDiscoverContinue = AtomicBoolean(false)
 
@@ -76,7 +76,8 @@ abstract class Printer
 
 
     /**
-     * Connect to the printer at [ipAddress] on a separate thread
+     * Connect to the printer at [ipAddress]
+     * Executes on the current thread
      */
     open fun connect(ipAddress: String) {
         connectionIpAddress = ipAddress
@@ -84,7 +85,14 @@ abstract class Printer
         tcpConnectionSocket.connect(connectionInfo)
         inputStream = tcpConnectionSocket.getInputStream()
         outputStream = tcpConnectionSocket.getOutputStream()
+
+        _onConnectionEventBackingField?.onConnect(ipAddress)
     }
+
+    /**
+     * Connect to the printer at [ipAddress]
+     * Executes on a separate thread
+     */
 
     open fun connectAsync(ipAddress: String)
     {
@@ -122,6 +130,7 @@ abstract class Printer
 
     /**
      * Disconnects the [tcpConnectionSocket]
+     * Executes on the current thread
      */
     open fun disconnect() {
         if(!tcpConnectionSocket.isClosed && tcpConnectionSocket.isConnected) {
@@ -129,6 +138,24 @@ abstract class Printer
             this._onConnectionEventBackingField?.onDisconnect(connectionIpAddress)
         }
     }
+
+    /**
+     * Disconnects the [tcpConnectionSocket]
+     * Executes on a separate thread
+     */
+    open fun disconnectAsync() {
+        ioThreadExecutor.execute {
+            if(!tcpConnectionSocket.isClosed && tcpConnectionSocket.isConnected) {
+                tcpConnectionSocket.close()
+                this._onConnectionEventBackingField?.onDisconnect(connectionIpAddress)
+            }
+        }
+
+    }
+
+    /**
+     *
+     */
 
     /**
      * Sets the [DiscoverEvent]
