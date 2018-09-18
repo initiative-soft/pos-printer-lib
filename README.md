@@ -1,5 +1,10 @@
 # PoS printer libary
 The goal of this library is to unify all the different PoS printer API's (and their quirks) under a single and simple API. Currently we aim for Etherner support.
+#Installation
+##Install using gradle
+```
+implementation 'com.initiative-soft:pos-printer-lib:0.2.0'
+```
 # How to use
 ```
 //First create a printer instance of the required vendor.
